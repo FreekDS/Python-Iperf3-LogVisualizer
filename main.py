@@ -1,5 +1,8 @@
 from IperfLog import IperfLog
+from Plotter import Plotter, PlotOptions
 
 
 if __name__ == '__main__':
-    print(IperfLog('log.txt').log_entries[0])
+    log = IperfLog('log.txt')
+    plotter = Plotter(log)
+    plotter.create_plot(PlotOptions.BANDWIDTH)

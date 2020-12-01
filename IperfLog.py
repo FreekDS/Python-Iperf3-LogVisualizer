@@ -63,14 +63,23 @@ class IperfLog:
 
         self.result: LogEntry
 
+        self.is_tcp = False
+
         with open(fp, 'r') as f:
             lines = f.readlines()
             connection_info = lines.pop(0)
             local_conn_info = lines.pop(0)
-            lines.pop(0)
+            self.__check_tcp(lines.pop(0))
             self.__parse_conn_info(connection_info)
             self.__parse_local_info(local_conn_info)
             self.__parse_data(lines)
+
+    def __check_tcp(self, header):
+        self.is_tcp = 'Datagrams' in header
+
+    @property
+    def unit(self):
+        return self.log_entries[0].transfer_unit
 
     def __parse_conn_info(self, line):
         line = line.replace('Connecting to host ', '')
@@ -101,7 +110,12 @@ class IperfLog:
             jitter = float(parts[6])
             return LogEntry(timings, float(parts[2]), parts[3], float(parts[4]), parts[5], total, lost, jitter)
         else:
-            return LogEntry(timings, float(parts[2]), parts[3], float(parts[4]), parts[5], int(parts[6]))
+            while len(parts) < 7:
+                parts.append(None)
+            if parts[6] in ('sender', 'receiver'):
+                parts[6] = None
+            dgram_count = None if not parts[6] else int(parts[6])
+            return LogEntry(timings, float(parts[2]), parts[3], float(parts[4]), parts[5], dgram_count)
 
     def __parse_data(self, lines):
         for i, line in enumerate(lines):
@@ -120,5 +134,3 @@ class IperfLog:
     def server_connection(self):
         return f'{self.server_addr}:{self.server_port}'
 
-    def get_as_graph_points(self):
-        raise NotImplemented()
