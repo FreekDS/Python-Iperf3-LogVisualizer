@@ -15,7 +15,12 @@ convert_table = {
     'Bytes': 1,
     'KBytes': 1000,
     'MBytes': pow(10, 6),
-    'GBytes': pow(10, 9)
+    'GBytes': pow(10, 9),
+
+    'Bits/sec': 1,
+    'Kbits/sec': 1000,
+    'Mbits/sec': pow(10, 6),
+    'Gbits/sec': pow(10, 9)
 }
 
 
@@ -38,10 +43,11 @@ class Plotter:
             y_axis = y_axis.value[0]
 
         required_measure = self.log.unit
+        if y_axis == 'bandwidth':
+            required_measure = self.log.log_entries[0].bandwidth_unit
 
         log: LogEntry
         for log in self.log.log_entries:
-
             x_entry = log.__getattribute__(x_axis)
             if x_entry is None:
                 raise AttributeError(f"LogEntry has no attribute '{x_axis}'")
@@ -49,8 +55,12 @@ class Plotter:
             if y_entry is None:
                 raise AttributeError(f"LogEntry has no attribute '{y_axis}'")
 
-            if log.transfer_unit != required_measure and convert_measures and y_axis != 'dgram_count':
+            if y_axis == 'transfer_rate' and log.transfer_unit != required_measure and convert_measures and \
+                    y_axis != 'dgram_count':
                 y_entry *= convert_multiplier(log.transfer_unit, required_measure)
+            if y_axis == 'bandwidth' and log.bandwidth_unit != required_measure and convert_measures and \
+                    y_axis != 'dgram_count':
+                y_entry *= convert_multiplier(log.bandwidth_unit, required_measure)
 
             if x_axis == 'time_interval':
                 x_entry = x_entry[0]
@@ -67,9 +77,8 @@ class Plotter:
         plt.xlabel(x_axis.replace('_', ' '))
         plt.ylabel(y_axis.replace('_', ' '))
         plt.title(self.log.server_connection + " trace")
-        plt.show()
-
         plt.savefig(fname, format='png')
+        plt.show()
 
 
 class PowerPlotter:
@@ -120,8 +129,7 @@ class PowerPlotter:
         plt.title(y_axis + ' over time (s)')
 
         plt.subplots_adjust(bottom=0.7)
+        plt.savefig(fname, format='png')
         plt.show()
 
         print(f"Changes in BSSID\n{change_str}")
-
-        plt.savefig(fname, format='png')
