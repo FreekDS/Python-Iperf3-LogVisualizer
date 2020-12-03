@@ -1,8 +1,13 @@
 from IperfLog import IperfLog
-from Plotter import Plotter, PlotOptions
+from PowerLog import PowerLog
+from Plotter import Plotter, PowerPlotter, PlotOptions
 
 
 if __name__ == '__main__':
     log = IperfLog('log.txt')
     plotter = Plotter(log)
     plotter.create_plot(PlotOptions.BANDWIDTH)
+
+    p_log = PowerLog('power-output.txt')
+    plotter = PowerPlotter(p_log)
+    plotter.create_plot(relative_time=True)
