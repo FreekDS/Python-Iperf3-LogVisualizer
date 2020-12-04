@@ -17,7 +17,7 @@ convert_table = {
     'MBytes': pow(10, 6),
     'GBytes': pow(10, 9),
 
-    'Bits/sec': 1,
+    'bits/sec': 1,
     'Kbits/sec': 1000,
     'Mbits/sec': pow(10, 6),
     'Gbits/sec': pow(10, 9)
@@ -128,7 +128,6 @@ class PowerPlotter:
         plt.ylabel(y_axis.replace('-', ''))
         plt.title(y_axis + ' over time (s)')
 
-        plt.subplots_adjust(bottom=0.7)
         plt.savefig(fname, format='png')
         plt.show()
 
