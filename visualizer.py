@@ -6,13 +6,19 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Visualize log files of iperf or of the power measurement script")
 parser.add_argument('input_files', type=str, nargs='+', help='¨Path to log file(s) to visualize')
-parser.add_argument('--type', '-t', required=True, choices=['power', 'iperf'], dest='type')
-parser.add_argument('--out-dir', '-o', required=False, default='./', dest='out_dir')
+parser.add_argument('--type', '-t', required=True, choices=['power', 'iperf'], dest='type',
+                    help='type of the input files')
+parser.add_argument('--out-dir', '-o', required=False, default='./', dest='out_dir',
+                    help='path to the directory to store the output files')
 parser.add_argument('--power-change', '-pc', required=False, default='channel', choices=['bssid', 'channel', 'none'],
-                    dest='pc')
-parser.add_argument('--power-yaxis', '-py', required=False, default='signal', choices=['channel', 'signal'], dest='pc')
+                    dest='pc',
+                    help='Only used in the power plots. Determines which change in parameter needs to be added to the'
+                         ' plots')
+parser.add_argument('--power-yaxis', '-py', required=False, default='signal', choices=['channel', 'signal'], dest='pc',
+                    help='Determines which value to display on the y-axis for the power plots')
 parser.add_argument('--iperf-yaxis', '-iy', required=False, default='bandwidth',
-                    choices=['bandwidth', 'transfer_rate', 'dgram_count'], dest='iy')
+                    choices=['bandwidth', 'transfer_rate', 'dgram_count'], dest='iy',
+                    help='Determines which value to display on the y-axis for the iperf plots')
 
 if __name__ == '__main__':
 
@@ -34,11 +40,3 @@ if __name__ == '__main__':
             log = IperfLog(in_file)
             plotter = Plotter(log)
             plotter.create_plot(fname=out_path, y_axis=args.iy)
-
-    # log = IperfLog('iperf-output.txt')
-    # plotter = Plotter(log)
-    # plotter.create_plot(PlotOptions.BANDWIDTH)
-    #
-    # p_log = PowerLog('power-output.txt')
-    # plotter = PowerPlotter(p_log)
-    # plotter.create_plot(relative_time=True, change_indicator=None, y_axis='channel')
