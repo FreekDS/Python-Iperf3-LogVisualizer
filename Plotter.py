@@ -72,6 +72,8 @@ class Plotter:
 
         if x_axis == 'time_interval':
             x_axis = 'time'
+        if y_axis == 'bandwidth':
+            y_axis = f"{y_axis} ({required_measure})"
 
         plt.plot(x_points, y_points)
         plt.xlabel(x_axis.replace('_', ' '))
@@ -85,16 +87,18 @@ class PowerPlotter:
     def __init__(self, power_log: PowerLog):
         self.power_log = power_log
 
-    def create_plot(self, y_axis='signal', relative_time=True, fname='power-output.png'):
+    def create_plot(self, y_axis='signal', relative_time=True, fname='power-output.png',change_indicator='bssid'):
         x_points = list()
         y_points = list()
 
         bssid_change_points = list()
+        channel_change_points = list()
         change_str = str()
 
         log: PowerEntry
         start_time = datetime.datetime.strptime(self.power_log.log_entries[0].time, '%H:%M:%S')
         current_bssid = self.power_log.log_entries[0].bssid
+        current_channel = self.power_log.log_entries[0].channel
         for log in self.power_log.log_entries:
             if relative_time:
                 log_time = datetime.datetime.strptime(log.time, '%H:%M:%S')
@@ -106,29 +110,52 @@ class PowerPlotter:
             y_points.append(y_point)
             x_points.append(x_point)
 
-            if current_bssid != log.bssid:
-                bssid_change_points.append((x_point, y_point))
-                i = len(bssid_change_points)
-                change_str += f"{i}. {current_bssid} -> {log.bssid} ({x_point}s)\n"
-
-            current_bssid = log.bssid
+            if change_indicator == 'bssid':
+                if current_bssid != log.bssid:
+                    bssid_change_points.append((x_point, y_point))
+                    i = len(bssid_change_points)
+                    change_str += f"{i}. {current_bssid} -> {log.bssid} ({x_point}s)\n"
+                    current_bssid = log.bssid
+            elif change_indicator == 'channel':
+                if current_channel != log.channel:
+                    channel_change_points.append((x_point, y_point))
+                    i = len(channel_change_points)
+                    change_str += f"{i}. {current_channel} -> {log.channel} ({x_point}s)\n"
+                    current_channel = log.channel
 
         plt.plot(x_points, y_points)
-        plt.plot(*zip(*bssid_change_points), 'ro')
 
-        for i, point in enumerate(bssid_change_points):
-            plt.annotate(f"{i + 1}",
-                         xy=point,
-                         xycoords='data',
-                         xytext=(-20, -20),
-                         textcoords='offset pixels'
-                         )
+        if change_indicator == 'bssid':
+            plt.plot(*zip(*bssid_change_points), 'ro')
+            for i, point in enumerate(bssid_change_points):
+                plt.annotate(f"{i + 1}",
+                             xy=point,
+                             xycoords='data',
+                             xytext=(-20, -20),
+                             textcoords='offset pixels'
+                             )
+                print(f"Changes in BSSID\n{change_str}")
+        elif change_indicator == 'channel':
+            plt.plot(*zip(*channel_change_points), 'ro')
+            for i, point in enumerate(channel_change_points):
+                plt.annotate(f"{i + 1}",
+                             xy=point,
+                             xycoords='data',
+                             xytext=(-20, -20),
+                             textcoords='offset pixels'
+                             )
+            print(f"Changes in channel\n{change_str}")
 
-        plt.xlabel('time')
+        plt.xlabel('time (s)')
+        if y_axis == 'signal':
+            if self.power_log.is_in_dbm:
+                y_axis += ' (dbm)'
+            else:
+                y_axis += ' (%)'
         plt.ylabel(y_axis.replace('-', ''))
         plt.title(y_axis + ' over time (s)')
 
         plt.savefig(fname, format='png')
         plt.show()
 
-        print(f"Changes in BSSID\n{change_str}")
+

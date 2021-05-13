@@ -41,6 +41,9 @@ class PowerLog:
     def __proc_line(self, line):
         ' '.join(line.split())
         parts = line.split()
+        if len(parts) < 4:
+            self.log_entries.append(PowerEntry(parts[0], None, None, None))
+            return
         signal = int(parts[1].replace('%', ''))
         self.log_entries.append(PowerEntry(parts[0], signal, parts[2], parts[3]))
 
